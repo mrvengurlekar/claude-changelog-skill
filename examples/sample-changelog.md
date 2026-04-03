@@ -30,7 +30,7 @@ Root cause of the bug: contextvars.ContextVar doesn't propagate writes from chil
 |-----------|---------|
 | Python | 3.11-slim (Dockerfile) |
 | fastapi | 0.111.0 |
-| google-cloud-firestore | >=2.21.0,<3.0.0 |
+| sqlalchemy / database-client | >=2.0 |
 | langgraph | 1.0.3 |
 | langchain | 1.0.7 |
 | uvicorn | 0.30.1 |
@@ -45,33 +45,39 @@ Root cause of the bug: contextvars.ContextVar doesn't propagate writes from chil
 ```python
 # Reserve usage BEFORE running the expensive operation:
 await check_budget(user_id)          # Read-only check
-await record_usage(user_id)          # Increment(1) BEFORE work runs
+await record_usage(user_id)          # Atomic +1 BEFORE work runs
 try:
-    result = await asyncio.wait_for(agent.run(...), timeout=300.0)
+    result = await asyncio.wait_for(run_pipeline(...), timeout=300.0)
 except Exception:
-    await rollback_usage(user_id)    # Increment(-1) on failure
+    await rollback_usage(user_id)    # Atomic -1 on failure
     raise
 
-# Database-level atomic increment:
-async def record_usage(user_id):
-    await db.collection("usage").document(user_id).set({
-        daily_key: {"calls": firestore.Increment(1), "last_call": now},
-        monthly_key: {"calls": firestore.Increment(1)},
-    }, merge=True)
+# Generic database atomic increment pattern:
+async def record_usage(user_id: str):
+    daily_key = f"d_{date.today()}"
+    monthly_key = f"m_{date.today().strftime('%Y-%m')}"
+    await db.update_counters(
+        table="api_usage",
+        key=user_id,
+        increments={daily_key: 1, monthly_key: 1},
+    )
 
-async def rollback_usage(user_id):
-    await db.collection("usage").document(user_id).set({
-        daily_key: {"calls": firestore.Increment(-1)},
-        monthly_key: {"calls": firestore.Increment(-1)},
-    }, merge=True)
+async def rollback_usage(user_id: str):
+    daily_key = f"d_{date.today()}"
+    monthly_key = f"m_{date.today().strftime('%Y-%m')}"
+    await db.update_counters(
+        table="api_usage",
+        key=user_id,
+        increments={daily_key: -1, monthly_key: -1},
+    )
 ```
 
 ## What Will Break If You Change This
 - If you add in-memory caching back: usage will diverge across replicas and reset on cold starts
 - If you move record_usage AFTER the agent: concurrent flood attack window reopens (100 requests can all pass the check before any are recorded)
 - If you use contextvars again for per-request counters: reads will return 0 (same bug)
-- If the subscription config doc is missing in the database: 500 error (intentional — no silent defaults)
-- If you add fallback defaults: a misconfigured database will silently allow unlimited usage instead of failing
+- If the config record is missing in the database: 500 error (intentional — no silent defaults)
+- If you add fallback defaults: a misconfigured database will silently allow unlimited usage
 
 ## Files Changed
 - [rate_limiter.py](../../src/rate_limiter.py)
