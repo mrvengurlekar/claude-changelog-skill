@@ -1,9 +1,19 @@
 # Rate Limiter Rewrite to Firestore-Only with Reserve-Before-Rollback
 
 **Date:** 2026-04-02
-**Claude Model:** claude-opus-4-6 (1M context)
-**Platform:** Windows 11 (win32)
 **Trigger:** User reported usage in dev DB did not update correctly after /analyze calls
+
+## Claude Session Details
+| Parameter | Value |
+|-----------|-------|
+| Model | Claude Opus 4.6 |
+| Model ID | claude-opus-4-6 |
+| Context Window | 1M tokens |
+| Knowledge Cutoff | May 2025 |
+| Platform | Windows 11 (win32) |
+| Mode | default |
+| Agent | primary (code written directly, Explore subagent used for CORS config research) |
+| Agent Model | same as above |
 
 ## What Changed
 - rate_limiter.py: Complete rewrite from 400 lines to 140 lines

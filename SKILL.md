@@ -17,7 +17,13 @@ Generate a detailed changelog entry for the current code changes. This entry wil
    - Read the key modified files to understand the full context.
 
 2. **Gather technical metadata:**
-   - Claude model: Report the model you are running as (from your system context).
+   - **Claude internals** (from your system context — report ALL of these):
+     - Model name and ID (e.g., "Claude Opus 4.6", model ID "claude-opus-4-6")
+     - Context window size (e.g., "1M context")
+     - Knowledge cutoff date
+     - Claude Code version if available
+     - Any active mode (e.g., "fast mode", "plan mode")
+     - Agent type that produced the code: "primary" for main conversation, or the subagent type if code was written by a spawned agent (e.g., "general-purpose", "Explore", "Plan"). If multiple agents contributed, list all of them with what each did.
    - Read requirements.txt, package.json, or equivalent to capture module versions relevant to the change.
    - Read Dockerfile if present to capture Python/Node version.
    - Note the platform (from system context).
@@ -34,9 +40,19 @@ Generate a detailed changelog entry for the current code changes. This entry wil
 # [Title — from $ARGUMENTS or inferred]
 
 **Date:** [YYYY-MM-DD]
-**Claude Model:** [exact model ID from system context]
-**Platform:** [OS from system context]
 **Trigger:** [what user asked for or what problem was reported]
+
+## Claude Session Details
+| Parameter | Value |
+|-----------|-------|
+| Model | [model name, e.g., Claude Opus 4.6] |
+| Model ID | [exact ID, e.g., claude-opus-4-6] |
+| Context Window | [e.g., 1M tokens] |
+| Knowledge Cutoff | [e.g., May 2025] |
+| Platform | [OS from system context] |
+| Mode | [default / fast / plan, if applicable] |
+| Agent | [primary, or subagent type: general-purpose / Explore / Plan] |
+| Agent Model | [if subagent used a different model override, note it here; otherwise "same as above"] |
 
 ## What Changed
 [Bullet list of files and what changed in each]
@@ -44,7 +60,7 @@ Generate a detailed changelog entry for the current code changes. This entry wil
 ## Why This Approach
 [The reasoning chain — what was the problem, what options were considered, why this solution]
 
-## Technical Environment
+## Project Dependencies
 | Component | Version |
 |-----------|---------|
 | Python / Node | [from Dockerfile or package.json engines] |

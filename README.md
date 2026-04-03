@@ -74,8 +74,8 @@ See [examples/sample-changelog.md](examples/sample-changelog.md) for a real-worl
 
 | Section | Purpose |
 |---------|---------|
-| **Claude Model** | Which model version produced this code |
-| **Technical Environment** | Exact dependency versions at the time |
+| **Claude Session Details** | Model ID, context window, knowledge cutoff, mode |
+| **Project Dependencies** | Exact dependency versions at the time |
 | **Why This Approach** | The reasoning chain, not just the result |
 | **Key Technical Constraints** | Undocumented behavior, discovered gotchas |
 | **Code Pattern** | The essential snippet future maintainers need |
